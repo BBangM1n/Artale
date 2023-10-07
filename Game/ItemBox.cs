@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 public class ItemBox : MonoBehaviour
 {
-    Player player;
     public float MaxHp;
     public float NowHp;
     public GameObject hudDamageText;
@@ -13,7 +12,7 @@ public class ItemBox : MonoBehaviour
     public Sprite[] image;
     SpriteRenderer spriteimage;
 
-    public bool broken;
+    public bool broken = false;
     public GameObject[] item;
     public int i;
 
@@ -21,7 +20,6 @@ public class ItemBox : MonoBehaviour
     void Start()
     {
         spriteimage = GetComponent<SpriteRenderer>();
-        player = GameObject.Find("Player").GetComponent<Player>();
         MaxHp = 20;
         NowHp = 20;
     }
@@ -38,10 +36,10 @@ public class ItemBox : MonoBehaviour
         else if (NowHp >= 0)
             spriteimage.sprite = image[3];
 
-        if(NowHp <= 0 && broken == false)
+        if(NowHp <= 0)
         {
-            dropitem();
-            broken = true;
+            if(broken == false)
+               dropitem();
             Destroy(gameObject);
         }
     }
@@ -65,6 +63,7 @@ public class ItemBox : MonoBehaviour
 
     void dropitem()
     {
+        broken = true;
         i = Random.Range(0, 3);
         Instantiate(item[i], transform.position, transform.rotation);
     }

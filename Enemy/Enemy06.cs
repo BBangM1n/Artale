@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy03mini : MonoBehaviour
+public class Enemy06 : MonoBehaviour
 {
     public int movemotion;
     public float MaxHp;
@@ -15,7 +15,7 @@ public class Enemy03mini : MonoBehaviour
     Rigidbody2D rigid;
     Animator anim;
     SpriteRenderer sprite;
-    CapsuleCollider2D capsul;
+    CircleCollider2D capsul;
     Player player;
     PlayerStat pstat;
     public GameObject hudDamageText;
@@ -25,6 +25,16 @@ public class Enemy03mini : MonoBehaviour
     public bool skill = false;
     public int count = 0;
 
+    public float cooltime = 1;
+    private bool On;
+
+    public GameObject bullet;
+    public Transform pos;
+
+    public float bulletcooltime;
+    private float bulletcurtime;
+
+
 
     // Start is called before the first frame update
     void Start()
@@ -32,7 +42,7 @@ public class Enemy03mini : MonoBehaviour
         rigid = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
-        capsul = GetComponent<CapsuleCollider2D>();
+        capsul = GetComponent<CircleCollider2D>();
         player = GameObject.Find("Player").GetComponent<Player>();
         pstat = GameObject.Find("Player").GetComponent<PlayerStat>();
 
@@ -40,11 +50,16 @@ public class Enemy03mini : MonoBehaviour
         Invoke("Think", 5);
 
         // 몬스터 기본 정보
-        MaxHp = 10;
-        NowHp = 10;
-        monsterdef = 2;
+        MaxHp = 20;
+        NowHp = 20;
+        monsterdef = 3;
         monsterdmg = 5;
-        speed = 5;
+        speed = 1.5f;
+
+        On = true;
+
+        StartCoroutine(bulletspawn());
+
     }
 
     // Update is called once per frame
@@ -55,6 +70,10 @@ public class Enemy03mini : MonoBehaviour
             StartCoroutine(Clear());
             skill = false;
         }
+
+        if(cooltime >= 0)
+            cooltime -= Time.deltaTime;
+        OnandOff();
     }
 
     void FixedUpdate()
@@ -62,26 +81,34 @@ public class Enemy03mini : MonoBehaviour
         //움직임
         rigid.velocity = new Vector2(movemotion * speed, rigid.velocity.y);
 
-        //앞 플랫폼 체크
+
+        if(On == true)
+            transform.Translate(new Vector2(0, -1f * Time.deltaTime * 0.5f));
+        else if(On == false)
+            transform.Translate(new Vector2(0, 1f * Time.deltaTime * 0.5f));
+
         Vector2 frontVec = new Vector2(rigid.position.x + movemotion * 0.5f, rigid.position.y);
-        Debug.DrawRay(frontVec, Vector3.down, new Color(0, 1, 0));
+        Debug.DrawRay(frontVec, Vector3.left * 2f, new Color(0, 1, 0));
 
-        RaycastHit2D rayhit = Physics2D.Raycast(frontVec, Vector3.down, 1, LayerMask.GetMask("ALLFloor"));
+        RaycastHit2D rayhit = Physics2D.Raycast(frontVec, Vector3.left, 2, LayerMask.GetMask("ALLFloor"));
 
-        if (rayhit.collider == null)
+        if (rayhit.collider != null)
         {
             turn();
         }
+
     }
 
     void turn() // 몬스터 방향 전환
     {
         movemotion *= -1;
-        sprite.flipX = movemotion == 1;
+        sprite.flipX = movemotion == -1;
 
         CancelInvoke();
         Invoke("Think", 5);
     }
+
+
 
     void Think() // 몬스터 패턴
     {
@@ -91,9 +118,14 @@ public class Enemy03mini : MonoBehaviour
         float nextTime = Random.Range(2f, 5f);
         Invoke("Think", nextTime);
 
+        //걷는 모션
+        if (movemotion != 0)
+            anim.SetBool("Walk", true);
+        else
+            anim.SetBool("Walk", false);
         //방향 전환
         if (movemotion != 0)
-            sprite.flipX = movemotion == 1;
+            sprite.flipX = movemotion == -1;
     }
 
     void OnTriggerEnter2D(Collider2D coll)
@@ -101,7 +133,8 @@ public class Enemy03mini : MonoBehaviour
         if (godmode == false) // 몬스터 피격인식
             if (coll.gameObject.tag == "ATK")
             {
-                OnDamaged();
+                if (player.Dmg >= monsterdef)
+                    OnDamaged();
                 Debug.Log("총알인식");
             }
     }
@@ -122,6 +155,7 @@ public class Enemy03mini : MonoBehaviour
             sprite.color = new Color(1, 1, 1, 0.5f);
             rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
             movemotion = 0;
+            anim.SetBool("Walk", false);
             StartCoroutine(Atkmotion());
         }
     }
@@ -133,8 +167,9 @@ public class Enemy03mini : MonoBehaviour
         movemotion = Random.Range(-1, 2);
         if (movemotion == 0)
             movemotion = Random.Range(-1, 2);
+        anim.SetBool("Walk", true);
         if (movemotion != 0)
-            sprite.flipX = movemotion == 1;
+            sprite.flipX = movemotion == -1;
         yield return new WaitForSeconds(0.8f);
         godmode = false;
         sprite.color = new Color(1, 1, 1, 1);
@@ -143,13 +178,14 @@ public class Enemy03mini : MonoBehaviour
 
     IEnumerator Diemotion() // 죽음
     {
-        pstat.Exp += 1;
-        DataMgr.instance.nowPlayer.exp += 1;
+        pstat.Exp += 3;
+        DataMgr.instance.nowPlayer.exp += 3;
         sprite.color = new Color(1, 1, 1, 0.5f);
         rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
         sprite.flipY = true;
         capsul.enabled = false;
         movemotion = 0;
+        anim.SetBool("Walk", false);
         yield return new WaitForSeconds(3);
         Destroy(gameObject);
     }
@@ -189,5 +225,34 @@ public class Enemy03mini : MonoBehaviour
                 StopCoroutine(dots());
             }
         }
+    }
+
+    void OnandOff()
+    {
+        if(cooltime <= 0)
+        {
+            if (On == true)
+            {
+                On = false;
+                cooltime = 1;
+            }
+            else if (On == false)
+            {
+                On = true;
+                cooltime = 1;
+            }
+        }
+    }
+
+    void ATK()
+    {
+        Instantiate(bullet, pos.position, transform.rotation);
+    }
+
+    IEnumerator bulletspawn()
+    {
+        ATK();
+        yield return new WaitForSecondsRealtime(3.0f);
+        StartCoroutine(bulletspawn());
     }
 }

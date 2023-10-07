@@ -17,6 +17,7 @@ public class Enemy03 : MonoBehaviour
     SpriteRenderer sprite;
     CapsuleCollider2D capsul;
     Player player;
+    PlayerStat pstat;
     public GameObject hudDamageText;
     public Transform hudpos;
 
@@ -35,6 +36,7 @@ public class Enemy03 : MonoBehaviour
         sprite = GetComponent<SpriteRenderer>();
         capsul = GetComponent<CapsuleCollider2D>();
         player = GameObject.Find("Player").GetComponent<Player>();
+        pstat = GameObject.Find("Player").GetComponent<PlayerStat>();
 
         // 시작 모션
         Invoke("Think", 5);
@@ -143,6 +145,8 @@ public class Enemy03 : MonoBehaviour
 
     IEnumerator Diemotion() // 죽음
     {
+        pstat.Exp += 3;
+        DataMgr.instance.nowPlayer.exp += 3;
         sprite.color = new Color(1, 1, 1, 0.5f);
         rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
         sprite.flipY = true;

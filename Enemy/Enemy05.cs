@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy03mini : MonoBehaviour
+public class Enemy05 : MonoBehaviour
 {
     public int movemotion;
     public float MaxHp;
@@ -15,7 +15,7 @@ public class Enemy03mini : MonoBehaviour
     Rigidbody2D rigid;
     Animator anim;
     SpriteRenderer sprite;
-    CapsuleCollider2D capsul;
+    CircleCollider2D capsul;
     Player player;
     PlayerStat pstat;
     public GameObject hudDamageText;
@@ -25,6 +25,8 @@ public class Enemy03mini : MonoBehaviour
     public bool skill = false;
     public int count = 0;
 
+    public Transform playertransform;
+
 
     // Start is called before the first frame update
     void Start()
@@ -32,19 +34,20 @@ public class Enemy03mini : MonoBehaviour
         rigid = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
         sprite = GetComponent<SpriteRenderer>();
-        capsul = GetComponent<CapsuleCollider2D>();
+        capsul = GetComponent<CircleCollider2D>();
         player = GameObject.Find("Player").GetComponent<Player>();
         pstat = GameObject.Find("Player").GetComponent<PlayerStat>();
+        playertransform = GameObject.Find("Player").GetComponent<Transform>();
 
         // 시작 모션
         Invoke("Think", 5);
 
         // 몬스터 기본 정보
-        MaxHp = 10;
-        NowHp = 10;
-        monsterdef = 2;
+        MaxHp = 20;
+        NowHp = 20;
+        monsterdef = 3;
         monsterdmg = 5;
-        speed = 5;
+        speed = 0.5f;
     }
 
     // Update is called once per frame
@@ -66,12 +69,25 @@ public class Enemy03mini : MonoBehaviour
         Vector2 frontVec = new Vector2(rigid.position.x + movemotion * 0.5f, rigid.position.y);
         Debug.DrawRay(frontVec, Vector3.down, new Color(0, 1, 0));
 
-        RaycastHit2D rayhit = Physics2D.Raycast(frontVec, Vector3.down, 1, LayerMask.GetMask("ALLFloor"));
+        RaycastHit2D rayhit = Physics2D.Raycast(frontVec, Vector3.down, 1.5f, LayerMask.GetMask("ALLFloor"));
 
         if (rayhit.collider == null)
         {
             turn();
         }
+
+        if (playertransform.position.x >= transform.position.x && sprite.flipX == true)
+        {
+            //오른쪽에 내가 존재 & 오른쪽을 바라보고 있음
+            monsterdef = 5;
+        }
+        else if(playertransform.position.x <= transform.position.x && sprite.flipX == false)
+        {
+            //왼쪽에 내가 존재
+            monsterdef = 5;
+        }
+        else
+            monsterdef = 3;
     }
 
     void turn() // 몬스터 방향 전환
@@ -91,6 +107,11 @@ public class Enemy03mini : MonoBehaviour
         float nextTime = Random.Range(2f, 5f);
         Invoke("Think", nextTime);
 
+        //걷는 모션
+        if (movemotion != 0)
+            anim.SetBool("Walk", true);
+        else
+            anim.SetBool("Walk", false);
         //방향 전환
         if (movemotion != 0)
             sprite.flipX = movemotion == 1;
@@ -101,7 +122,8 @@ public class Enemy03mini : MonoBehaviour
         if (godmode == false) // 몬스터 피격인식
             if (coll.gameObject.tag == "ATK")
             {
-                OnDamaged();
+                if (player.Dmg >= monsterdef)
+                    OnDamaged();
                 Debug.Log("총알인식");
             }
     }
@@ -122,6 +144,7 @@ public class Enemy03mini : MonoBehaviour
             sprite.color = new Color(1, 1, 1, 0.5f);
             rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
             movemotion = 0;
+            anim.SetBool("Walk", false);
             StartCoroutine(Atkmotion());
         }
     }
@@ -133,6 +156,7 @@ public class Enemy03mini : MonoBehaviour
         movemotion = Random.Range(-1, 2);
         if (movemotion == 0)
             movemotion = Random.Range(-1, 2);
+        anim.SetBool("Walk", true);
         if (movemotion != 0)
             sprite.flipX = movemotion == 1;
         yield return new WaitForSeconds(0.8f);
@@ -143,13 +167,14 @@ public class Enemy03mini : MonoBehaviour
 
     IEnumerator Diemotion() // 죽음
     {
-        pstat.Exp += 1;
-        DataMgr.instance.nowPlayer.exp += 1;
+        pstat.Exp += 3;
+        DataMgr.instance.nowPlayer.exp += 3;
         sprite.color = new Color(1, 1, 1, 0.5f);
         rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
         sprite.flipY = true;
         capsul.enabled = false;
         movemotion = 0;
+        anim.SetBool("Walk", false);
         yield return new WaitForSeconds(3);
         Destroy(gameObject);
     }

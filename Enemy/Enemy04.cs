@@ -2,15 +2,25 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Enemy03mini : MonoBehaviour
+public class Enemy04 : MonoBehaviour
 {
-    public int movemotion;
+
+    /* 설명 
+     * 공중 비행몬스터. o
+     * 플레이어 감지 기능. o
+     * 일정한 범위안에 플레이어가 있으면 날기 시작. o
+     */
+
+    public Transform playertransform;
+    public float speed = 4f;
+    public float range = 10f;
+    public bool nodie = true;
+
     public float MaxHp;
     public float NowHp;
     public int monsterdmg;
     public int monsterdef;
     private bool godmode = false;
-    public float speed;
 
     Rigidbody2D rigid;
     Animator anim;
@@ -21,12 +31,10 @@ public class Enemy03mini : MonoBehaviour
     public GameObject hudDamageText;
     public Transform hudpos;
 
-
+    //스킬 관련
     public bool skill = false;
     public int count = 0;
 
-
-    // Start is called before the first frame update
     void Start()
     {
         rigid = GetComponent<Rigidbody2D>();
@@ -35,65 +43,47 @@ public class Enemy03mini : MonoBehaviour
         capsul = GetComponent<CapsuleCollider2D>();
         player = GameObject.Find("Player").GetComponent<Player>();
         pstat = GameObject.Find("Player").GetComponent<PlayerStat>();
+        playertransform = GameObject.Find("Player").GetComponent<Transform>();
 
         // 시작 모션
         Invoke("Think", 5);
 
         // 몬스터 기본 정보
-        MaxHp = 10;
-        NowHp = 10;
-        monsterdef = 2;
+        MaxHp = 15;
+        NowHp = 15;
+        monsterdef = 3;
         monsterdmg = 5;
-        speed = 5;
     }
 
-    // Update is called once per frame
     void Update()
     {
+        //플레이어 탐지
+        float distance = Vector2.Distance(transform.position, playertransform.position);
+        if (nodie == true)
+        {
+            if (distance <= range)
+            {
+                anim.SetBool("Flying", true);
+                transform.position = Vector3.MoveTowards(transform.position, playertransform.position, speed * Time.deltaTime);
+            }
+            else
+                anim.SetBool("Flying", false);
+        }
+
         if (skill == true)
         {
             StartCoroutine(Clear());
             skill = false;
         }
-    }
 
-    void FixedUpdate()
-    {
-        //움직임
-        rigid.velocity = new Vector2(movemotion * speed, rigid.velocity.y);
-
-        //앞 플랫폼 체크
-        Vector2 frontVec = new Vector2(rigid.position.x + movemotion * 0.5f, rigid.position.y);
-        Debug.DrawRay(frontVec, Vector3.down, new Color(0, 1, 0));
-
-        RaycastHit2D rayhit = Physics2D.Raycast(frontVec, Vector3.down, 1, LayerMask.GetMask("ALLFloor"));
-
-        if (rayhit.collider == null)
+        if(playertransform.position.x >= transform.position.x)
         {
-            turn();
+            sprite.flipX = true;
         }
-    }
-
-    void turn() // 몬스터 방향 전환
-    {
-        movemotion *= -1;
-        sprite.flipX = movemotion == 1;
-
-        CancelInvoke();
-        Invoke("Think", 5);
-    }
-
-    void Think() // 몬스터 패턴
-    {
-        //방향 선택
-        movemotion = Random.Range(-1, 2);
-
-        float nextTime = Random.Range(2f, 5f);
-        Invoke("Think", nextTime);
-
-        //방향 전환
-        if (movemotion != 0)
-            sprite.flipX = movemotion == 1;
+        else
+        {
+            sprite.flipX = false;
+        }
     }
 
     void OnTriggerEnter2D(Collider2D coll)
@@ -101,8 +91,8 @@ public class Enemy03mini : MonoBehaviour
         if (godmode == false) // 몬스터 피격인식
             if (coll.gameObject.tag == "ATK")
             {
-                OnDamaged();
                 Debug.Log("총알인식");
+                OnDamaged();
             }
     }
 
@@ -121,7 +111,6 @@ public class Enemy03mini : MonoBehaviour
         {
             sprite.color = new Color(1, 1, 1, 0.5f);
             rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
-            movemotion = 0;
             StartCoroutine(Atkmotion());
         }
     }
@@ -129,12 +118,6 @@ public class Enemy03mini : MonoBehaviour
     IEnumerator Atkmotion() // 피격
     {
         godmode = true;
-        yield return new WaitForSeconds(0.5f);
-        movemotion = Random.Range(-1, 2);
-        if (movemotion == 0)
-            movemotion = Random.Range(-1, 2);
-        if (movemotion != 0)
-            sprite.flipX = movemotion == 1;
         yield return new WaitForSeconds(0.8f);
         godmode = false;
         sprite.color = new Color(1, 1, 1, 1);
@@ -143,14 +126,14 @@ public class Enemy03mini : MonoBehaviour
 
     IEnumerator Diemotion() // 죽음
     {
-        pstat.Exp += 1;
-        DataMgr.instance.nowPlayer.exp += 1;
+        nodie = false;
+        pstat.Exp += 3;
+        DataMgr.instance.nowPlayer.exp += 3;
         sprite.color = new Color(1, 1, 1, 0.5f);
         rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
         sprite.flipY = true;
         capsul.enabled = false;
-        movemotion = 0;
-        yield return new WaitForSeconds(3);
+        yield return new WaitForSeconds(1);
         Destroy(gameObject);
     }
 
@@ -190,4 +173,5 @@ public class Enemy03mini : MonoBehaviour
             }
         }
     }
+
 }

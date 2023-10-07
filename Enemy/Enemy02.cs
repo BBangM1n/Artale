@@ -16,6 +16,7 @@ public class Enemy02 : MonoBehaviour
     public SpriteRenderer sprite;
     CapsuleCollider2D capsul;
     Player player;
+    PlayerStat pstat;
     public GameObject hudDamageText;
     public Transform hudpos;
 
@@ -38,6 +39,7 @@ public class Enemy02 : MonoBehaviour
         sprite = GetComponent<SpriteRenderer>();
         capsul = GetComponent<CapsuleCollider2D>();
         player = GameObject.Find("Player").GetComponent<Player>();
+        pstat = GameObject.Find("Player").GetComponent<PlayerStat>();
 
         // 몬스터 기본 정보
         MaxHp = 20;
@@ -104,6 +106,8 @@ public class Enemy02 : MonoBehaviour
 
     IEnumerator Diemotion() // 죽음
     {
+        pstat.Exp += 4;
+        DataMgr.instance.nowPlayer.exp += 4;
         sprite.color = new Color(1, 1, 1, 0.5f);
         rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
         sprite.flipY = true;

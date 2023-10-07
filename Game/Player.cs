@@ -40,6 +40,7 @@ public class Player : MonoBehaviour
     public GameObject hudDiemsgText; // 사망 메시지
     public bool diemsg = false;
 
+    public bool jumping = false;
 
 
     // Start is called before the first frame update
@@ -51,15 +52,16 @@ public class Player : MonoBehaviour
         capsule = GetComponent<CapsuleCollider2D>();
 
         maxSpeed = 5;
-        jumpPower = 10;
-        playerMaxhp = 100;
-        playerhp = playerMaxhp;
-        playerMaxmp = 100;
-        playermp = playerMaxmp;
+        jumpPower = 18;
         anim.SetBool("Death", false);
 
-        Dmg = 5;
-        Defence = 2;
+        Dmg = DataMgr.instance.nowPlayer.str;
+        Defence = DataMgr.instance.nowPlayer.dfc;
+        playerMaxhp = DataMgr.instance.nowPlayer.Maxhp;
+        playerhp = playerMaxhp;
+        playerMaxmp = DataMgr.instance.nowPlayer.Maxmp;
+        playermp = playerMaxmp;
+
     }
 
     // Update is called once per frame
@@ -76,8 +78,10 @@ public class Player : MonoBehaviour
         if (Input.GetButtonDown("Jump") && isGrounded) {
             rigid.velocity = new Vector2(rigid.velocity.x, jumpPower);
             anim.SetBool("Jump", true);  // 점프 애니메이션
+            jumping = true;
         }
         if (isGrounded && rigid.velocity.y == 0)
+            jumping = false;
             anim.SetBool("Jump",false); // 땅일시 점프 풀림
        
         //플레이어 강제로 피 닳게하기
@@ -100,17 +104,16 @@ public class Player : MonoBehaviour
         else
             anim.SetBool("Run", true);
 
-        if (Input.GetKeyDown(KeyCode.Z)) //어택 애니메이션
-        {
-            //anim.SetTrigger("Attack");
-        }
-
-
         if(mpbool == true)
             mpcooltime -= Time.deltaTime;
         if (mpcooltime <= 0 && playermp < playerMaxmp)
         {
             mpup();
+        }
+
+        if(playermp < playerMaxmp)
+        {
+            mpbool = true;
         }
 
     }
@@ -144,23 +147,26 @@ public class Player : MonoBehaviour
         //코인 구분
         if(coll.gameObject.tag == "Gold"){
             gamemgr.stagegold += 100;
+            DataMgr.instance.nowPlayer.coin += 100;
             Debug.Log(gamemgr.stagegold);
             coll.gameObject.SetActive(false);
         }
 
         if(coll.gameObject.tag == "Silber"){
             gamemgr.stagegold += 50;
+            DataMgr.instance.nowPlayer.coin += 50;
             Debug.Log(gamemgr.stagegold);
             coll.gameObject.SetActive(false);
         }
 
         if(coll.gameObject.tag == "Bronze"){
             gamemgr.stagegold += 10;
+            DataMgr.instance.nowPlayer.coin += 10;
             Debug.Log(gamemgr.stagegold);
             coll.gameObject.SetActive(false);
         }
-
     }
+
 
     public void OnCollisionEnter2D(Collision2D collision)
     {

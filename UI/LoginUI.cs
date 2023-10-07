@@ -9,7 +9,7 @@ public class LoginUI : MonoBehaviour
     // Start is called before the first frame update
     public void StartBtn()
     {
-        SceneManager.LoadScene("World");
+        SceneManager.LoadScene("Save");
     }
 
     public void ExitBtn()

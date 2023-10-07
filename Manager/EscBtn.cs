@@ -2,11 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerATK : MonoBehaviour
+public class EscBtn : MonoBehaviour
 {
-    public GameObject bullet;
-    public Transform pos;
-    
     // Start is called before the first frame update
     void Start()
     {
@@ -16,14 +13,9 @@ public class PlayerATK : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        ATK();
-    }
-
-    void ATK()
-    {
-        if(Input.GetKeyUp(KeyCode.Z))
+        if(Input.GetKeyDown(KeyCode.Escape))
         {
-            Instantiate(bullet, pos.position, transform.rotation);
+            Application.Quit();
         }
     }
 }

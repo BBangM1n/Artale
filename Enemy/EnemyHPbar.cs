@@ -9,6 +9,8 @@ public class EnemyHPbar : MonoBehaviour
     public Enemy02 enemy02;
     public Enemy03 enemy03;
     public Enemy03mini enemy03mini;
+    public Enemy04 enemy04;
+    public Enemy05 enemy05;
 
     public GameObject objet;
     public float Maxhp;
@@ -55,6 +57,16 @@ public class EnemyHPbar : MonoBehaviour
         {
             Maxhp = enemy03mini.MaxHp;
             Nowhp = enemy03mini.NowHp;
+        }
+        else if (enemy04 != null)
+        {
+            Maxhp = enemy04.MaxHp;
+            Nowhp = enemy04.NowHp;
+        }
+        else if (enemy05 != null)
+        {
+            Maxhp = enemy05.MaxHp;
+            Nowhp = enemy05.NowHp;
         }
     }
 }

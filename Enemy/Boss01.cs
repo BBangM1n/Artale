@@ -17,12 +17,14 @@ public class Boss01 : MonoBehaviour
     SpriteRenderer sprite;
     CapsuleCollider2D capsul;
     Player player;
+    PlayerStat pstat;
     public GameObject hudDamageText;
     public Transform hudpos;
 
 
     public bool skill = false;
     public int count = 0;
+    public GameObject LastPotal;
 
 
     // Start is called before the first frame update
@@ -32,6 +34,7 @@ public class Boss01 : MonoBehaviour
         sprite = GetComponent<SpriteRenderer>();
         capsul = GetComponent<CapsuleCollider2D>();
         player = GameObject.Find("Player").GetComponent<Player>();
+        pstat = GameObject.Find("Player").GetComponent<PlayerStat>();
 
         // 시작 모션
         movemotion = -1;
@@ -53,13 +56,15 @@ public class Boss01 : MonoBehaviour
             skill = false;
         }
 
-        Debug.DrawRay(new Vector2(rigid.position.x,-2), Vector3.left * 50, new Color(0, 1, 1));
-        RaycastHit2D rayhitL = Physics2D.Raycast(new Vector2(rigid.position.x, -2), Vector3.left, 50, LayerMask.GetMask("Player"));
-        RaycastHit2D rayhitL2= Physics2D.Raycast(new Vector2(rigid.position.x, -1), Vector3.left, 50, LayerMask.GetMask("Player"));
-        RaycastHit2D rayhitL3= Physics2D.Raycast(new Vector2(rigid.position.x, 0), Vector3.left, 50, LayerMask.GetMask("Player"));
-        RaycastHit2D rayhitR = Physics2D.Raycast(new Vector2(rigid.position.x, -2), Vector3.left, 50, LayerMask.GetMask("Player"));
-        RaycastHit2D rayhitR2= Physics2D.Raycast(new Vector2(rigid.position.x, -1), Vector3.left, 50, LayerMask.GetMask("Player"));
-        RaycastHit2D rayhitR3= Physics2D.Raycast(new Vector2(rigid.position.x, 0), Vector3.left, 50, LayerMask.GetMask("Player"));
+        Debug.DrawRay(new Vector2(rigid.position.x, -5), Vector3.left * 50, new Color(0, 1, 1));
+        Debug.DrawRay(new Vector2(rigid.position.x, -6), Vector3.left * 50, new Color(0, 1, 1));
+        Debug.DrawRay(new Vector2(rigid.position.x, -7), Vector3.left * 50, new Color(0, 1, 1));
+        RaycastHit2D rayhitL = Physics2D.Raycast(new Vector2(rigid.position.x, -5), Vector3.left, 50, LayerMask.GetMask("Player"));
+        RaycastHit2D rayhitL2= Physics2D.Raycast(new Vector2(rigid.position.x, -6), Vector3.left, 50, LayerMask.GetMask("Player"));
+        RaycastHit2D rayhitL3= Physics2D.Raycast(new Vector2(rigid.position.x, -7), Vector3.left, 50, LayerMask.GetMask("Player"));
+        RaycastHit2D rayhitR = Physics2D.Raycast(new Vector2(rigid.position.x, -5), Vector3.right, 50, LayerMask.GetMask("Player"));
+        RaycastHit2D rayhitR2= Physics2D.Raycast(new Vector2(rigid.position.x, -6), Vector3.right, 50, LayerMask.GetMask("Player"));
+        RaycastHit2D rayhitR3= Physics2D.Raycast(new Vector2(rigid.position.x, -7), Vector3.right, 50, LayerMask.GetMask("Player"));
 
         if (rayhitL.collider != null || rayhitL2.collider != null || rayhitL3.collider != null)
         {
@@ -152,12 +157,15 @@ public class Boss01 : MonoBehaviour
 
     IEnumerator Diemotion() // 죽음
     {
+        pstat.Exp += 30;
+        DataMgr.instance.nowPlayer.exp += 30;
         sprite.color = new Color(1, 1, 1, 0.5f);
         rigid.AddForce(Vector2.up * 5, ForceMode2D.Impulse);
         sprite.flipY = true;
         capsul.enabled = false;
         movemotion = 0;
         yield return new WaitForSeconds(3);
+        LastPotal.SetActive(true);
         Destroy(gameObject);
     }
 

@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class GameMgr : MonoBehaviour
 {
     public Text goldtext;
-    public int totalgold;
     public int stagegold;
 
     public Text GtimeText;
@@ -14,17 +13,20 @@ public class GameMgr : MonoBehaviour
     int min;
     float sec;
 
-    GameObject shop;
     Shoptory shoptory;
     Transform slotp;
+    Shopdatabase shopdata;
     public GameObject shopPrefab;
+
+    public bool buf = false;
+    public bool reset = false;
 
 
     void Start()
     {
-        stagegold = 0;
-        totalgold = 0;
+        stagegold = DataMgr.instance.nowPlayer.coin;
         shoptory = GameObject.Find("Shop").GetComponent<Shoptory>();
+         
     }
 
     void Update()
@@ -34,7 +36,7 @@ public class GameMgr : MonoBehaviour
         shoptime();
 
        if (gtime <= 0)
-        {
+       {
             for (int i = 0; i < 4; i++)
             {
                 slotp = GameObject.Find("ShopPanel").transform.GetChild(0).GetChild(i);
@@ -43,7 +45,13 @@ public class GameMgr : MonoBehaviour
             gtime = 3600;
             shoptory.slotreset();
             shoptory.slotadd();
+       }
+
+       if(buf == true && reset == false)
+        {
+            StartCoroutine(resetbuf());
         }
+
     }
 
     void shoptime()
@@ -55,4 +63,18 @@ public class GameMgr : MonoBehaviour
         GtimeText.text = "상점초기화 가능 까지 " + string.Format("{0:D2} : {1:D2}", min, (int)sec);
     }
    
+    public void Savedata()
+    {
+        DataMgr.instance.SaveData();
+    }
+
+    IEnumerator resetbuf()
+    {
+        reset = true;
+        yield return new WaitForSeconds(10f);
+        buf = false;
+        reset = false;
+        Debug.Log("초기화");
+    }
+
 }
